@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, minLength } from "class-validator";
+import { Type } from "class-transformer";
+import { IsDate, IsEmail, IsNotEmpty, IsString} from "class-validator";
 
 export class CreateUserDto {
 
@@ -14,8 +15,16 @@ export class CreateUserDto {
     @IsNotEmpty()
     email: string;
 
-    @IsString()
     @IsNotEmpty()
-    @MinLength(8)
-    password: string;
+    @IsString()
+    domicilio: string;
+
+    @IsNotEmpty()
+    @IsDate()
+    @Type(() => Date)
+    fechaNacimiento: Date;
+
+    @IsNotEmpty()
+    @IsString()
+    dni: string;
 }

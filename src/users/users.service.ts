@@ -1,8 +1,7 @@
 import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
@@ -17,51 +16,64 @@ export class UsersService extends PrismaClient implements OnModuleInit{
 
 
   async create(createUserDto: CreateUserDto) {
-    return this.user.create({data: createUserDto, select: {id: true,nombre: true, apellido: true,email: true, role: true}});
+    try {
+      return this.user.create({data: createUserDto});
+    } catch (error) {
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Error en la creacion del usuario'
+      })
+    }
   }
 
   async findOne(id: number) {
-    const user = await this.user.findFirst({where: {id: id}, select: {id: true,nombre: true, apellido: true, email: true, role: true}});
+    try {
+      const user = await this.user.findFirst({where: {id: id}});
 
-    return user;
+      return user;
+    } catch (error) {
+      throw new RpcException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Usuario no encontrado'
+      })
+    }
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const {id: __, ...data} = updateUserDto;
+    try {
+      
+      const {id: __, ...data} = updateUserDto;
 
-    await this.findOne(id);
+      await this.findOne(id);
 
-    return this.user.update({where: {id}, data, select: {id: true,nombre: true, apellido: true,email: true, role: true}}); 
+      return this.user.update({where: {id}, data}); 
+
+    } catch (error) {
+      throw new RpcException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Error en la actualización del usuario'
+      })
+    }
   }
 
   async remove(id: number) {
-    await this.findOne(id);
+    try {
 
-    const user = await this.user.update({
-      where: {id},
-      data: {available: false},
-      select: {id: true,nombre: true, apellido: true, email: true, role: true}
-    });
+      await this.findOne(id);
 
-    return user;
-  }
-
-  async login(loginUserDto: LoginUserDto) {
-    const userX = await this.user.findFirst({
-      where: {email: loginUserDto.email, password: loginUserDto.password},
-      select: {id: true,nombre: true, apellido: true, email: true, role: true}
-    });
-
-    if(!userX) {
-      throw new RpcException({
-        message: `Incorrect Email / Incorrect Password`,
-        status: HttpStatus.BAD_REQUEST
+      const user = await this.user.update({
+        where: {id},
+        data: {available: false}
       });
+
+      
+      return user;
+
+    } catch (error) {
+      throw new RpcException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Error en la eliminación del usuario'
+      })
     }
-
-    const userF = await this.user.update({where: {id: userX.id}, select: {id: true,nombre: true, apellido: true, email: true, role: true}, data: {role: Role.USER}});
-
-
-    return userF;
   }
 }

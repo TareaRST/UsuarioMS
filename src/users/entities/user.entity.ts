@@ -7,7 +7,9 @@ export class User {
 
     public email: string;
 
-    public password: string;
+    public domicilio: string;
 
-    public role: string;
+    public dni: string;
+
+    public fechaNacimiento: Date;
 }
