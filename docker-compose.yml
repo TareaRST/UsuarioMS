@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:13
     container_name: user_database
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123456
